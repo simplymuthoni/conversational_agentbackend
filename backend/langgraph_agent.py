@@ -39,6 +39,3 @@ for sq in subqueries:
 results = await search.run_search(sq)
 docs.extend(results)
 timeline.append({"step": "fetched_results", "details": [len(docs)]})
-
-
-}
