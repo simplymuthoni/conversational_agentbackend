@@ -1,0 +1,14 @@
+fastapi
+uvicorn[standard]
+httpx
+pydantic
+python-dotenv
+aioredis
+SQLAlchemy
+alembic
+psycopg2-binary
+pytest
+httpx
+langgraph
+langsmith
+# note: lock versions in production
