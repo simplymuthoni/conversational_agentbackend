@@ -1,5 +1,6 @@
 
 services:
+# LangGraph API Service
   langgraph-api:
     build:
       context: ./backend
