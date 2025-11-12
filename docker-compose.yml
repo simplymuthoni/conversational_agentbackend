@@ -7,7 +7,7 @@ services:
       dockerfile: Dockerfile
     container_name: langgraph-api
     env_file:
-      - ./backend/.env
+      - ./.env
     ports:
       - "8000:8000"
     depends_on:
