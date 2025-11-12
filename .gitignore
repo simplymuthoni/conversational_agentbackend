@@ -4,3 +4,5 @@
 # BUT allow .env.example
 !.env.example
 
+# Ignore Docker Compose files
+docker-compose.yml
