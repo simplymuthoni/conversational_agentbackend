@@ -11,4 +11,5 @@ pytest
 httpx
 langgraph
 langsmith
+google-generativeai
 # note: lock versions in production
