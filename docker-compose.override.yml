@@ -1,0 +1,44 @@
+# docker-compose.override.yml
+services:
+  langgraph-api:
+    # Mount your backend source code into the container for live reload
+    volumes:
+      - ./backend:/app/backend
+      - ./logs:/app/logs
+
+    # Override the default command to enable FastAPI autoreload
+    command: uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
+
+    # Add any development environment variables here
+    environment:
+      - ENV=development
+      - DEBUG=True
+
+    # Expose same port mapping for clarity
+    ports:
+      - "8000:8000"
+
+    # Optional: wait for Postgres before running (good for dev stability)
+    depends_on:
+      - postgres
+      - redis
+
+  postgres:
+    # Keep your local database data persistent
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./backend/sql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=research
+
+  redis:
+    # Add volume to persist data between restarts (optional for dev)
+    volumes:
+      - redisdata:/data
+
+volumes:
+  pgdata:
+  redisdata:
