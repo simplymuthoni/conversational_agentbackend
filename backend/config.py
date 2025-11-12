@@ -27,7 +27,7 @@ Note:
     will fail to start with a ValidationError.
 """
 
-from pydantic import BaseSettings, Field, validator
+from pydantic_settings import BaseSettings, Field, validator
 from typing import Optional
 import logging
 
