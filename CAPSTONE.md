@@ -199,46 +199,44 @@ External Services:
 ```
 project-root/
 ├── README.md
+├── pyproject.toml
 ├── CAPSTONE.md
 ├── .gitignore
 ├── docker-compose.yml
 ├── docker-compose.override.yml
-├── docs/
-│   ├── architecture.md
-│   ├── setup.md
-│   ├── security.md
-│   └── integrations/
-│       ├── gemini.md
-│       └── africastalking.md
+├── .env.example
 ├── backend/
 │   ├── Dockerfile
-│   ├── .env.example
-│   ├── README.md
 │   ├── requirements.txt
-│   ├── pyproject.toml
-│   └── backend/
-│       ├── __init__.py
-│       ├── main.py
-│       ├── config.py
-│       ├── langgraph_agent.py
-│       ├── schemas.py
-│       ├── routes/
-│       │   ├── __init__.py
-│       │   ├── research.py
-│       │   └── sms.py
-│       ├── services/
-│       │   ├── __init__.py
-│       │   ├── search.py
-│       │   ├── llm.py
-│       │   └── synthesis.py
-│       ├── utils/
-│       │   ├── __init__.py
-│       │   ├── db.py
-│       │   ├── cache.py
-│       │   └── filters.py
-│       └── tests/
-│           ├── __init__.py
-│           └── test_research.py
+│   ├── __init__.py
+│   ├── main.py
+│   ├── config.py
+│   ├── langgraph_agent.py
+│   ├── schemas.py
+│   ├── routes/
+│   │   ├── __init__.py
+│   │   ├── research.py
+│   │   └── sms.py
+│   ├── services/
+│   │   ├── __init__.py
+│   │   ├── search.py
+│   │   ├── llm.py
+│   │   └── synthesis.py
+│   ├── utils/
+│   │   ├── __init__.py
+│   │   ├── db.py
+│   │   ├── cache.py
+│   │   └── filters.py
+│   |── tests/
+│   ├── __init__.py
+│   └── test_research.py
+|   ├── docs/
+|   │   ├── architecture.md
+|   │   ├── setup.md
+|   │   ├── security.md
+|   │   └── integrations/
+|   │       ├── gemini.md
+|   │       └── africastalking.md
 └── frontend/
     ├── src/
     ├── public/
