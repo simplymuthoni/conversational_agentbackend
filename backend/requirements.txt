@@ -9,6 +9,7 @@ aioredis
 SQLAlchemy
 alembic
 psycopg2-binary
+asyncpg
 pytest
 httpx
 langgraph
