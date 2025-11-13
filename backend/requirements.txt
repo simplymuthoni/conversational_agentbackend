@@ -2,7 +2,9 @@ fastapi
 uvicorn[standard]
 httpx
 pydantic-settings
+pydantic
 python-dotenv
+python-multipart
 aioredis
 SQLAlchemy
 alembic
@@ -12,4 +14,5 @@ httpx
 langgraph
 langsmith
 google-generativeai
+redis
 # note: lock versions in production
