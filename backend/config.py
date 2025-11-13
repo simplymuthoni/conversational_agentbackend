@@ -93,12 +93,17 @@ class Settings(BaseSettings):
     search_api_key: Optional[str] = Field(
         None,
         env="SEARCH_API_KEY",
-        description="API key for search provider (SerpAPI, Brave, etc.)"
+        description="API key for search provider (SerpAPI, Brave, Google)"
+    )
+    search_engine_id: Optional[str] = Field(
+        None,
+        env="SEARCH_ENGINE_ID",
+        description="Search Engine ID for Google Custom Search"
     )
     search_provider: str = Field(
         default="mock",
         env="SEARCH_PROVIDER",
-        description="Search provider to use: mock, serpapi, brave, google"
+        description="Search provider: mock, gemini, serpapi, brave, google"
     )
     
     # ==================== Database Configuration ====================
