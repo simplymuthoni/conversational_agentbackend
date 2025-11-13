@@ -147,7 +147,7 @@ class Settings(BaseSettings):
     
     # ==================== LLM Configuration ====================
     llm_model: str = Field(
-        default="gemini-1.5-pro-latest-latest",
+        default="gemini-1.5-pro-latest",
         env="LLM_MODEL",
         description="Gemini model to use for generation"
     )

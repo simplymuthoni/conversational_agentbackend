@@ -41,7 +41,7 @@ class GeminiLLM:
     
     def __init__(
         self,
-        model_name: str = "gemini-1.5-pro-latest-latest",
+        model_name: str = "gemini-1.5-pro-latest",
         temperature: float = 0.7,
         max_tokens: int = 2048
     ):
