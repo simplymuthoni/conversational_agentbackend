@@ -217,11 +217,173 @@ class BraveSearchProvider(SearchProvider):
             return []
 
 
+class GeminiSearchProvider(SearchProvider):
+    """
+    Gemini with Google Search grounding.
+    
+    Uses Gemini's built-in grounding feature to search Google.
+    Requires only Gemini API key, no separate search API needed.
+    
+    Note: This is currently in preview and may have usage limits.
+    """
+    
+    def __init__(self):
+        """Initialize Gemini search provider."""
+        try:
+            import google.generativeai as genai
+            from google.generativeai import caching
+            
+            genai.configure(api_key=settings.GEMINI_API_KEY)
+            self.model = genai.GenerativeModel('gemini-1.5-pro')
+            logger.info("Gemini Search provider initialized")
+        except ImportError:
+            logger.error("google-generativeai package not installed")
+            raise
+    
+    async def search(self, query: str, num_results: int = 10) -> List[Dict[str, Any]]:
+        """
+        Search using Gemini with Google Search grounding.
+        
+        Args:
+            query: Search query
+            num_results: Number of results (limited by Gemini)
+            
+        Returns:
+            List of search results from Gemini grounding
+        """
+        logger.info(f"Gemini grounding search for: {query}")
+        
+        try:
+            # Use Gemini with grounding tool
+            from google.generativeai.types import Tool, GoogleSearchRetrieval
+            
+            # Create search tool
+            search_tool = Tool(google_search_retrieval=GoogleSearchRetrieval())
+            
+            # Generate with grounding
+            response = await asyncio.to_thread(
+                self.model.generate_content,
+                f"Search and summarize information about: {query}",
+                tools=[search_tool]
+            )
+            
+            # Extract grounding metadata
+            results = []
+            if hasattr(response, 'candidates') and response.candidates:
+                candidate = response.candidates[0]
+                if hasattr(candidate, 'grounding_metadata'):
+                    metadata = candidate.grounding_metadata
+                    
+                    # Parse search results from grounding
+                    for i, chunk in enumerate(getattr(metadata, 'search_entry_point', {}).get('rendered_content', [])):
+                        results.append({
+                            "title": chunk.get('title', f'Result {i+1}'),
+                            "url": chunk.get('url', ''),
+                            "snippet": chunk.get('snippet', ''),
+                            "source": "Google (via Gemini)",
+                            "position": i + 1
+                        })
+            
+            # Fallback: parse from response text
+            if not results:
+                # Create a single result from Gemini's response
+                results = [{
+                    "title": f"Information about {query}",
+                    "url": "",
+                    "snippet": response.text[:500] if response.text else "",
+                    "source": "Gemini with Google Search",
+                    "position": 1
+                }]
+            
+            logger.info(f"Gemini grounding returned {len(results)} results")
+            return results[:num_results]
+        
+        except Exception as e:
+            logger.error(f"Gemini search error: {str(e)}")
+            return []
+
+
+class GoogleCustomSearchProvider(SearchProvider):
+    """
+    Google Custom Search API provider.
+    
+    Official Google API for programmable search.
+    Requires: search_api_key (API key) and search_engine_id (CSE ID)
+    Website: https://developers.google.com/custom-search
+    """
+    
+    def __init__(self, api_key: str, engine_id: str):
+        """
+        Initialize Google Custom Search provider.
+        
+        Args:
+            api_key: Google API key
+            engine_id: Custom Search Engine ID
+        """
+        self.api_key = api_key
+        self.engine_id = engine_id
+        self.base_url = "https://www.googleapis.com/customsearch/v1"
+    
+    async def search(self, query: str, num_results: int = 10) -> List[Dict[str, Any]]:
+        """
+        Search using Google Custom Search API.
+        
+        Args:
+            query: Search query
+            num_results: Number of results (max 10 per request)
+            
+        Returns:
+            List of search results
+        """
+        logger.info(f"Google Custom Search for: {query}")
+        
+        params = {
+            "key": self.api_key,
+            "cx": self.engine_id,
+            "q": query,
+            "num": min(num_results, 10)  # API limit
+        }
+        
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.get(self.base_url, params=params)
+                response.raise_for_status()
+                data = response.json()
+            
+            # Parse results
+            results = []
+            for i, item in enumerate(data.get("items", [])[:num_results]):
+                results.append({
+                    "title": item.get("title", ""),
+                    "url": item.get("link", ""),
+                    "snippet": item.get("snippet", ""),
+                    "source": "Google Custom Search",
+                    "position": i + 1
+                })
+            
+            logger.info(f"Google Custom Search returned {len(results)} results")
+            return results
+        
+        except httpx.HTTPError as e:
+            logger.error(f"Google Custom Search HTTP error: {str(e)}")
+            return []
+        except Exception as e:
+            logger.error(f"Google Custom Search error: {str(e)}")
+            return []
+
+
 class SearchService:
     """
     Main search service with provider abstraction.
     
     Handles provider selection, result ranking, and filtering.
+    
+    Supported providers:
+    - mock: Testing/development
+    - gemini: Gemini with Google Search grounding (only needs GEMINI_API_KEY)
+    - serpapi: SerpAPI (needs SEARCH_API_KEY)
+    - brave: Brave Search (needs SEARCH_API_KEY)
+    - google: Google Custom Search (needs SEARCH_API_KEY + SEARCH_ENGINE_ID)
     """
     
     def __init__(self):
@@ -237,7 +399,20 @@ class SearchService:
         """
         provider_name = settings.search_provider.lower()
         
-        if provider_name == "serpapi":
+        if provider_name == "gemini":
+            # Use Gemini's built-in Google Search grounding
+            if settings.GEMINI_API_KEY:
+                logger.info("Using Gemini with Google Search grounding")
+                try:
+                    return GeminiSearchProvider()
+                except Exception as e:
+                    logger.error(f"Failed to init Gemini search: {e}, falling back to mock")
+                    return MockSearchProvider()
+            else:
+                logger.warning("GEMINI_API_KEY not found, falling back to mock")
+                return MockSearchProvider()
+        
+        elif provider_name == "serpapi":
             if settings.search_api_key:
                 logger.info("Using SerpAPI search provider")
                 return SerpAPIProvider(settings.search_api_key)
@@ -251,6 +426,17 @@ class SearchService:
                 return BraveSearchProvider(settings.search_api_key)
             else:
                 logger.warning("Brave API key not found, falling back to mock")
+                return MockSearchProvider()
+        
+        elif provider_name == "google":
+            if settings.search_api_key and hasattr(settings, 'search_engine_id'):
+                logger.info("Using Google Custom Search provider")
+                return GoogleCustomSearchProvider(
+                    settings.search_api_key,
+                    settings.search_engine_id
+                )
+            else:
+                logger.warning("Google Custom Search credentials not found, falling back to mock")
                 return MockSearchProvider()
         
         else:
