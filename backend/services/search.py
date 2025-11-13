@@ -234,7 +234,7 @@ class GeminiSearchProvider(SearchProvider):
             from google.generativeai import caching
             
             genai.configure(api_key=settings.GEMINI_API_KEY)
-            self.model = genai.GenerativeModel('gemini-1.5-pro-latest')
+            self.model = genai.GenerativeModel('gemini-1.5-pro')
             logger.info("Gemini Search provider initialized")
         except ImportError:
             logger.error("google-generativeai package not installed")
@@ -546,7 +546,8 @@ class SearchService:
             position_penalty = result.get("position", 10) * 0.1
             score -= position_penalty
             
-            result["relevance_score"] = max(0.0, score)
+            # Normalize to 0.0-1.0 range (schema requirement)
+            result["relevance_score"] = max(0.0, min(1.0, score / 10.0))
         
         # Sort by relevance score
         results.sort(key=lambda x: x.get("relevance_score", 0), reverse=True)
