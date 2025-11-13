@@ -234,7 +234,7 @@ class GeminiSearchProvider(SearchProvider):
             from google.generativeai import caching
             
             genai.configure(api_key=settings.GEMINI_API_KEY)
-            self.model = genai.GenerativeModel('gemini-1.5-pro')
+            self.model = genai.GenerativeModel('gemini-1.5-pro-latest')
             logger.info("Gemini Search provider initialized")
         except ImportError:
             logger.error("google-generativeai package not installed")

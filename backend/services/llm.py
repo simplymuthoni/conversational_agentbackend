@@ -41,7 +41,7 @@ class GeminiLLM:
     
     def __init__(
         self,
-        model_name: str = "gemini-1.5-pro",
+        model_name: str = "gemini-1.5-pro-latest-latest",
         temperature: float = 0.7,
         max_tokens: int = 2048
     ):
@@ -49,7 +49,7 @@ class GeminiLLM:
         Initialize Gemini LLM client.
         
         Args:
-            model_name: Gemini model to use (default: gemini-1.5-pro)
+            model_name: Gemini model to use (default: gemini-1.5-pro-latest)
             temperature: Sampling temperature (0.0-1.0)
             max_tokens: Maximum tokens in response
         """
