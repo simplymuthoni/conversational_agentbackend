@@ -27,8 +27,7 @@ Note:
     will fail to start with a ValidationError.
 """
 
-from pydantic_settings import BaseSettings
-from pydantic import Field, validator
+from pydantic import BaseSettings, Field, validator
 from typing import Optional
 import logging
 
@@ -147,7 +146,7 @@ class Settings(BaseSettings):
     
     # ==================== LLM Configuration ====================
     llm_model: str = Field(
-        default="gemini-2.5-flash",
+        default="gemini-1.5-pro",
         env="LLM_MODEL",
         description="Gemini model to use for generation"
     )
@@ -265,7 +264,7 @@ class Settings(BaseSettings):
     @validator('search_provider')
     def validate_search_provider(cls, v):
         """Validate search provider."""
-        valid_providers = ['mock', 'serpapi', 'brave', 'google']
+        valid_providers = ['mock', 'gemini', 'serpapi', 'brave', 'google']
         v_lower = v.lower()
         if v_lower not in valid_providers:
             raise ValueError(f"search_provider must be one of: {', '.join(valid_providers)}")
