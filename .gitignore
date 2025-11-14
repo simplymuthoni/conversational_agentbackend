@@ -6,3 +6,7 @@
 
 # Ignore Docker Compose files
 docker-compose.yml
+
+#Ignore Frontend Package Lock files
+package-lock.json
+node_modules/
