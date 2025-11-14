@@ -98,6 +98,24 @@ services:
     networks:
       - research-network
 
+  # Frontend (React/Vite)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: research-agent-frontend
+    restart: unless-stopped
+    depends_on:
+      - langgraph-api
+    environment:
+      # API endpoint (backend URL)
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
+      NODE_ENV: ${NODE_ENV:-production}
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+    networks:
+      - research-network
+
 volumes:
   pgdata:
     driver: local
@@ -107,4 +125,3 @@ volumes:
 networks:
   research-network:
     driver: bridge
-  

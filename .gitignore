@@ -41,18 +41,6 @@ htmlcov/
 .dmypy.json
 dmypy.json
 
-# ============================================
-# Frontend / Node.js
-# ============================================
-node_modules/
-package-lock.json
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnp
-.pnp.js
-dist/
-build/
 
 # ============================================
 # IDEs & Editors
@@ -119,9 +107,7 @@ backend/__pycache__/
 # KEEP THESE FILES (explicitly not ignored)
 # ============================================
 !.env.example
-!docker-compose.yml
 !docker-compose.override.yml
 !requirements.txt
 !package.json
 !README.md
-!.gitignore
