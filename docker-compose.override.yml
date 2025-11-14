@@ -1,44 +1,129 @@
-# docker-compose.override.yml
+
+# Development overrides for docker-compose.yml
+# This file is automatically used when running: docker-compose up
+# For production only: docker-compose -f docker-compose.yml up
+
 services:
+  # Backend development overrides
   langgraph-api:
-    # Mount your backend source code into the container for live reload
-    volumes:
-      - ./backend:/app/backend
-      - ./logs:/app/logs
-
-    # Override the default command to enable FastAPI autoreload
+    # Override command for hot-reload
     command: uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
-
-    # Add any development environment variables here
+    
+    # Mount source code for live editing
+    volumes:
+      - ./backend:/app
+      - /app/__pycache__  # Exclude cache directories
+      - /app/.pytest_cache
+      - /app/venv
+      - ./backend/logs:/app/logs
+    
+    # Development environment
     environment:
-      - ENV=development
-      - DEBUG=True
+      APP_ENV: development
+      LOG_LEVEL: debug
+      
+      # Allow all CORS in development
+      CORS_ORIGINS: "*"
+    
+    # No restart policy in development
+    restart: "no"
+    
+    # More lenient healthcheck
+    healthcheck:
+      interval: 60s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
 
-    # Expose same port mapping for clarity
-    ports:
-      - "8000:8000"
-
-    # Optional: wait for Postgres before running (good for dev stability)
-    depends_on:
-      - postgres
-      - redis
-
+  # PostgreSQL development overrides
   postgres:
-    # Keep your local database data persistent
+    # No restart in development
+    restart: "no"
+    
+    # Enable query logging for debugging
+    command: >
+      postgres
+      -c log_statement=all
+      -c log_duration=on
+      -c log_min_duration_statement=0
+    
+    # Optional: Add initialization scripts
     volumes:
       - pgdata:/var/lib/postgresql/data
-      - ./backend/sql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      # Uncomment to add custom init scripts
+      # - ./backend/db/init.sql:/docker-entrypoint-initdb.d/init.sql
 
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=research
-
+  # Redis development overrides
   redis:
-    # Add volume to persist data between restarts (optional for dev)
-    volumes:
-      - redisdata:/data
+    # No restart in development
+    restart: "no"
+    
+    # Enable more verbose logging
+    command: redis-server --appendonly yes --loglevel debug
 
-volumes:
-  pgdata:
-  redisdata:
+  # Frontend development overrides
+  frontend:
+    # Use Vite dev server instead of production build
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    
+    command: npm run dev -- --host 0.0.0.0
+    
+    # Mount source code for hot-reload
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules  # Exclude node_modules from mount
+    
+    # Development environment
+    environment:
+      NODE_ENV: development
+      VITE_API_URL: http://localhost:8000
+    
+    # Vite default port
+    ports:
+      - "5173:5173"
+    
+    # No restart in development
+    restart: "no"
+
+# Optional development tools (uncomment as needed)
+
+  # pgAdmin - PostgreSQL management UI
+  # Uncomment to enable: http://localhost:5050
+  # pgadmin:
+  #   image: dpage/pgadmin4:latest
+  #   container_name: pgadmin
+  #   restart: "no"
+  #   environment:
+  #     PGADMIN_DEFAULT_EMAIL: admin@research.local
+  #     PGADMIN_DEFAULT_PASSWORD: admin
+  #     PGADMIN_CONFIG_SERVER_MODE: 'False'
+  #     PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
+  #   ports:
+  #     - "5050:80"
+  #   volumes:
+  #     - pgadmin_data:/var/lib/pgadmin
+  #   depends_on:
+  #     - postgres
+  #   networks:
+  #     - research-network
+
+  # Redis Commander - Redis management UI
+  # Uncomment to enable: http://localhost:8081
+  # redis-commander:
+  #   image: rediscommander/redis-commander:latest
+  #   container_name: redis-commander
+  #   restart: "no"
+  #   environment:
+  #     REDIS_HOSTS: local:redis:6379
+  #   ports:
+  #     - "8081:8081"
+  #   depends_on:
+  #     - redis
+  #   networks:
+  #     - research-network
+
+# Optional volumes for dev tools
+# volumes:
+#   pgadmin_data:
